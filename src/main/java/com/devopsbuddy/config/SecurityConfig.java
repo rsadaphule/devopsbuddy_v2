@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -18,7 +20,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 
-
+   @Autowired
+   private Environment env;
 
     /** Public URLs. */
     private static final String[] PUBLIC_MATCHERS = {
@@ -29,12 +32,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/",
             "/about/**",
             "/contact/**",
-            "/error/**/*"
+            "/error/**/*",
+            "/console/**",
+            "/h2-console/**"
 
     };
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+
+        List<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
+        if(activeProfiles.contains("dev"))
+        {
+            http.csrf().disable();
+            http.headers().frameOptions().disable();
+        }
+
+
 
         http
                 .authorizeRequests()
