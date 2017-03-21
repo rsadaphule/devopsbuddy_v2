@@ -82,9 +82,9 @@ public class RepositoriesIntegrationTest {
 
 
     @Test
-    public void createNewUser() throws Exception {
+    public void testCreateNewUser() throws Exception {
 
-        User basicUser = createUser();
+        User basicUser = createUser("testcreatenewuser", "testcreatenewUser@abc.com");
         User newlyCreatedUser = userRepository.findOne(basicUser.getId());
         Assert.assertNotNull(newlyCreatedUser);
         Assert.assertTrue(newlyCreatedUser.getId() != 0);
@@ -103,11 +103,8 @@ public class RepositoriesIntegrationTest {
     @Test
     public void testDeleteUser()  throws Exception
     {
-        User basicUser = createUser();
+        User basicUser = createUser("testdeleteuser", "testdeleteuser@abc.com");
         userRepository.delete(basicUser.getId());
-
-
-
     }
 
 
@@ -127,12 +124,12 @@ public class RepositoriesIntegrationTest {
     }
 
 
-    private User createUser()
+    private User createUser(String username, String email)
     {
         Plan basicPlan = createPlan(PlansEnum.BASIC);
         planRepository.save(basicPlan);
 
-        User basicUser = UserUtils.createBasicUser("repousertest","repouser@abc.com");
+        User basicUser = UserUtils.createBasicUser(username,email);
         basicUser.setPlan(basicPlan);
 
         Role basicRole = createRole(RolesEnum.BASIC);
