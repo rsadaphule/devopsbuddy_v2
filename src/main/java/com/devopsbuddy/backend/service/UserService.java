@@ -1,16 +1,22 @@
 package com.devopsbuddy.backend.service;
 
+import com.devopsbuddy.backend.persistence.domain.backend.PasswordResetToken;
 import com.devopsbuddy.backend.persistence.domain.backend.Plan;
 import com.devopsbuddy.backend.persistence.domain.backend.User;
 import com.devopsbuddy.backend.persistence.domain.backend.UserRole;
+import com.devopsbuddy.backend.persistence.respositories.PasswordResetTokenRepository;
 import com.devopsbuddy.backend.persistence.respositories.PlanRepository;
 import com.devopsbuddy.backend.persistence.respositories.RoleRepository;
 import com.devopsbuddy.backend.persistence.respositories.UserRepository;
 import com.devopsbuddy.enums.PlansEnum;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
 
 import java.util.Set;
 
@@ -23,6 +29,8 @@ import java.util.Set;
 @Transactional( readOnly = true)
 public class UserService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
+
     @Autowired
     private RoleRepository roleRepository;
 
@@ -31,6 +39,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -63,6 +74,19 @@ public class UserService {
 
 
 
+    }
+
+
+    @Transactional
+    public void updateUserPassword(long userId, String password) {
+        password = passwordEncoder.encode(password);
+        userRepository.updateUserPassword(userId, password);
+        LOG.debug("Password updated successfully for user id {} ", userId);
+
+        Set<PasswordResetToken> resetTokens = passwordResetTokenRepository.findAllByUserId(userId);
+        if (!resetTokens.isEmpty()) {
+            passwordResetTokenRepository.delete(resetTokens);
+        }
     }
 
 

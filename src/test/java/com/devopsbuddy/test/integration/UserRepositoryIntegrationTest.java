@@ -13,7 +13,9 @@ import com.devopsbuddy.enums.RolesEnum;
 import com.devopsbuddy.utils.UserUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -21,6 +23,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Created by sadap on 3/19/2017.
@@ -28,8 +31,10 @@ import java.util.Set;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = DevopsbuddyApplication.class)
-public class UserIntegrationTest extends AbstractIntegrationTest {
+public class UserRepositoryIntegrationTest extends AbstractIntegrationTest {
 
+    @Rule
+    public TestName testName = new TestName();
 
     private static final String ROLE_USER = "admin role";
 
@@ -97,6 +102,36 @@ public class UserIntegrationTest extends AbstractIntegrationTest {
         User basicUser = createUser("testdeleteuser", "testdeleteuser@abc.com");
         userRepository.delete(basicUser.getId());
     }
+
+    @Test
+    public void testFindUserbyEmail() throws Exception {
+
+        User basicUser = createUser(testName);
+        User newlyCreatedUser = userRepository.findByEmail(basicUser.getEmail());
+        Assert.assertNotNull(newlyCreatedUser);
+        Assert.assertTrue(newlyCreatedUser.getId() != 0);
+
+
+    }
+
+
+    @Test
+    public void testUpdateUserPassword() throws Exception {
+        User user = createUser(testName);
+        Assert.assertNotNull(user);
+        Assert.assertNotNull(user.getId());
+
+        String newPassword = UUID.randomUUID().toString();
+
+        userRepository.updateUserPassword(user.getId(), newPassword);
+
+        user = userRepository.findOne(user.getId());
+        Assert.assertEquals(newPassword, user.getPassword());
+
+    }
+
+
+
 
 
 

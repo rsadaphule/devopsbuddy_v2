@@ -9,7 +9,9 @@ import com.devopsbuddy.enums.PlansEnum;
 import com.devopsbuddy.enums.RolesEnum;
 import com.devopsbuddy.utils.UserUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -23,21 +25,17 @@ import java.util.Set;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = DevopsbuddyApplication.class)
-public class UserServiceIntegrationTest {
+public class UserServiceIntegrationTest extends AbstractServiceIntegrationTest {
 
 
-    @Autowired
-    private UserService userService;
+    @Rule
+    public TestName testName = new TestName();
 
 
     @Test
     public void testCreateNewUser() throws Exception
     {
-        Set<UserRole> userRoles = new HashSet<>();
-        User basicUser = UserUtils.createBasicUser("user1", "user1@abc.com");
-        userRoles.add(new UserRole(basicUser, new Role(RolesEnum.BASIC)));
-
-        User user = userService.createUser(basicUser, PlansEnum.BASIC, userRoles);
+        User user = createUser(testName);
         Assert.assertNotNull(user);
         Assert.assertNotNull(user.getId());
 
