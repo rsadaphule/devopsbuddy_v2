@@ -8,6 +8,7 @@ import com.devopsbuddy.backend.persistence.respositories.RoleRepository;
 import com.devopsbuddy.backend.persistence.respositories.UserRepository;
 import com.devopsbuddy.enums.PlansEnum;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
 
     @Transactional
     public User createUser(User user, PlansEnum plansEnum, Set<UserRole> userRoles)
@@ -40,6 +44,9 @@ public class UserService {
         {
             plan = planRepository.save(plan);
         }
+
+        String encryptedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encryptedPassword);
 
         user.setPlan(plan);
 
