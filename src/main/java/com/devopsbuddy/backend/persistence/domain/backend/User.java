@@ -73,6 +73,23 @@ public class User implements Serializable, UserDetails {
     private Plan plan;
 
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private Set<UserRole> userRoles = new HashSet<>();
+
+    public Set<PasswordResetToken> getPasswordResetTokens() {
+        return passwordResetTokens;
+    }
+
+    public void setPasswordResetTokens(Set<PasswordResetToken> passwordResetTokens) {
+        this.passwordResetTokens = passwordResetTokens;
+    }
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<PasswordResetToken> passwordResetTokens = new HashSet<>();
+
+
+
+
     public Set<UserRole> getUserRoles() {
         return userRoles;
     }
@@ -81,8 +98,7 @@ public class User implements Serializable, UserDetails {
         this.userRoles = userRoles;
     }
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private Set<UserRole> userRoles = new HashSet<>();
+
 
 
     @OneToMany(

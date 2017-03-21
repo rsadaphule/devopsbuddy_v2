@@ -28,16 +28,7 @@ import java.util.Set;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = DevopsbuddyApplication.class)
-public class RepositoriesIntegrationTest {
-
-    @Autowired
-    private PlanRepository planRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private RoleRepository roleRepository;
+public class UserIntegrationTest extends AbstractIntegrationTest {
 
 
     private static final String ROLE_USER = "admin role";
@@ -109,42 +100,6 @@ public class RepositoriesIntegrationTest {
 
 
 
-
-
-    private Plan createPlan(PlansEnum planEnum)
-    {
-        return new Plan(planEnum);
-    }
-
-
-    private Role createRole(RolesEnum rolesEnum)
-    {
-        return new Role(rolesEnum);
-
-    }
-
-
-    private User createUser(String username, String email)
-    {
-        Plan basicPlan = createPlan(PlansEnum.BASIC);
-        planRepository.save(basicPlan);
-
-        User basicUser = UserUtils.createBasicUser(username,email);
-        basicUser.setPlan(basicPlan);
-
-        Role basicRole = createRole(RolesEnum.BASIC);
-        roleRepository.save(basicRole);
-
-        Set<UserRole> userRoles = new HashSet<>();
-        UserRole userRole = new UserRole(basicUser, basicRole);
-        userRoles.add(userRole);
-
-        basicUser.getUserRoles().addAll(userRoles);
-        basicUser = userRepository.save(basicUser);
-        return basicUser;
-
-
-    }
 
 
 
