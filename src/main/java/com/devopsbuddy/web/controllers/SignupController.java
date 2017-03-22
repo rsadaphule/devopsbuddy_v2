@@ -4,11 +4,10 @@ import com.devopsbuddy.backend.persistence.domain.backend.Plan;
 import com.devopsbuddy.backend.persistence.domain.backend.Role;
 import com.devopsbuddy.backend.persistence.domain.backend.User;
 import com.devopsbuddy.backend.persistence.domain.backend.UserRole;
-
+import com.devopsbuddy.backend.service.PlanService;
 import com.devopsbuddy.backend.service.UserService;
 import com.devopsbuddy.enums.PlansEnum;
 import com.devopsbuddy.enums.RolesEnum;
-
 import com.devopsbuddy.utils.UserUtils;
 import com.devopsbuddy.web.domain.frontend.BasicAccountPayload;
 import com.devopsbuddy.web.domain.frontend.ProAccountPayload;
@@ -38,6 +37,11 @@ import java.util.*;
 @Controller
 public class    SignupController {
 
+    @Autowired
+    private PlanService planService;
+
+    @Autowired
+    private UserService userService;
 
 
     /** The application logger */
@@ -70,5 +74,118 @@ public class    SignupController {
         return SUBSCRIPTION_VIEW_NAME;
     }
 
+    @RequestMapping(value = SIGNUP_URL_MAPPING, method = RequestMethod.POST)
+    public String signUpPost(@RequestParam(name = "planId", required = true) int planId,
+                             @ModelAttribute(PAYLOAD_MODEL_KEY_NAME) @Valid ProAccountPayload payload,
+                             ModelMap model) throws IOException {
 
+        if (planId != PlansEnum.BASIC.getId() && planId != PlansEnum.PRO.getId()) {
+            model.addAttribute(SIGNED_UP_MESSAGE_KEY, "false");
+            model.addAttribute(ERROR_MESSAGE_KEY, "Plan id does not exist");
+            return SUBSCRIPTION_VIEW_NAME;
+        }
+
+        this.checkForDuplicates(payload, model);
+
+        boolean duplicates = false;
+
+        List<String> errorMessages = new ArrayList<>();
+
+        if (model.containsKey(DUPLICATED_USERNAME_KEY)) {
+            LOG.warn("The username already exists. Displaying error to the user");
+            model.addAttribute(SIGNED_UP_MESSAGE_KEY, "false");
+            errorMessages.add("Username already exist");
+            duplicates = true;
+        }
+
+        if (model.containsKey(DUPLICATED_EMAIL_KEY)) {
+            LOG.warn("The email already exists. Displaying error to the user");
+            model.addAttribute(SIGNED_UP_MESSAGE_KEY, "false");
+            errorMessages.add("Email already exist");
+            duplicates = true;
+        }
+
+        if (duplicates) {
+            model.addAttribute(ERROR_MESSAGE_KEY, errorMessages);
+            return SUBSCRIPTION_VIEW_NAME;
+        }
+
+
+        // There are certain info that the user doesn't set, such as profile image URL, Stripe customer id,
+        // plans and roles
+        LOG.debug("Transforming user payload into User domain object");
+        User user = UserUtils.fromWebUserToDomainUser(payload);
+
+
+        // Sets the Plan and the Roles (depending on the chosen plan)
+        LOG.debug("Retrieving plan from the database");
+        Plan selectedPlan = planService.findPlanById(planId);
+        if (null == selectedPlan) {
+            LOG.error("The plan id {} could not be found. Throwing exception.", planId);
+            model.addAttribute(SIGNED_UP_MESSAGE_KEY, "false");
+            model.addAttribute(ERROR_MESSAGE_KEY, "Plan id not found");
+            return SUBSCRIPTION_VIEW_NAME;
+        }
+        user.setPlan(selectedPlan);
+
+        User registeredUser = null;
+
+        // By default users get the BASIC ROLE
+        Set<UserRole> roles = new HashSet<>();
+        if (planId == PlansEnum.BASIC.getId()) {
+            roles.add(new UserRole(user, new Role(RolesEnum.BASIC)));
+            registeredUser = userService.createUser(user, PlansEnum.BASIC, roles);
+        } else {
+            roles.add(new UserRole(user, new Role(RolesEnum.PRO)));
+
+            // Extra precaution in case the POST method is invoked programmatically
+            if (StringUtils.isEmpty(payload.getCardCode()) ||
+                    StringUtils.isEmpty(payload.getCardNumber()) ||
+                    StringUtils.isEmpty(payload.getCardMonth()) ||
+                    StringUtils.isEmpty(payload.getCardYear())) {
+                LOG.error("One or more credit card fields is null or empty. Returning error to the user");
+                model.addAttribute(SIGNED_UP_MESSAGE_KEY, "false");
+                model.addAttribute(ERROR_MESSAGE_KEY, "One of more credit card details is null or empty.");
+                return SUBSCRIPTION_VIEW_NAME;
+
+            }
+
+
+            registeredUser = userService.createUser(user, PlansEnum.PRO, roles);
+            LOG.debug(payload.toString());
+        }
+
+
+        // Auto logins the registered user
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                registeredUser, null, registeredUser.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        LOG.info("User created successfully");
+
+        model.addAttribute(SIGNED_UP_MESSAGE_KEY, "true");
+
+        return SUBSCRIPTION_VIEW_NAME;
+    }
+
+
+
+
+    //--------------> Private methods
+
+    /**
+     * Checks if the username/email are duplicates and sets error flags in the model.
+     * Side effect: the method might set attributes on Model
+     **/
+    private void checkForDuplicates(BasicAccountPayload payload, ModelMap model) {
+
+        // Username
+        if (userService.findByUserName(payload.getUsername()) != null) {
+            model.addAttribute(DUPLICATED_USERNAME_KEY, true);
+        }
+        if (userService.findByEmail(payload.getEmail()) != null) {
+            model.addAttribute(DUPLICATED_EMAIL_KEY, true);
+        }
+
+    }
 }
