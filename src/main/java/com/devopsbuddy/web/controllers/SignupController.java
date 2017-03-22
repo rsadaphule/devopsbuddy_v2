@@ -76,6 +76,7 @@ public class    SignupController {
 
     @RequestMapping(value = SIGNUP_URL_MAPPING, method = RequestMethod.POST)
     public String signUpPost(@RequestParam(name = "planId", required = true) int planId,
+                             @RequestParam(name = "file", required = false) MultipartFile file,
                              @ModelAttribute(PAYLOAD_MODEL_KEY_NAME) @Valid ProAccountPayload payload,
                              ModelMap model) throws IOException {
 
@@ -115,6 +116,22 @@ public class    SignupController {
         // plans and roles
         LOG.debug("Transforming user payload into User domain object");
         User user = UserUtils.fromWebUserToDomainUser(payload);
+
+        if(file != null  && !file.isEmpty())
+        {
+            String profileImageUrl = null;
+            if(profileImageUrl != null)
+            {
+                user.setProfileImageUrl(profileImageUrl);
+            }
+            else
+            {
+                LOG.warn("There was a problem uploading the profile image to S3. The user's profile" +
+                " will be created without the image");
+            }
+
+        }
+
 
 
         // Sets the Plan and the Roles (depending on the chosen plan)

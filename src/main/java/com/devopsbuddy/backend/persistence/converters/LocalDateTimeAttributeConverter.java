@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class LocalDateTimeAttributeConverter implements AttributeConverter<LocalDateTime, Timestamp> {
 
 
+
     @Override
     public Timestamp convertToDatabaseColumn(LocalDateTime localDateTime) {
         return (localDateTime == null ? null : Timestamp.valueOf(localDateTime));
