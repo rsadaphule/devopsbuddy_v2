@@ -6,13 +6,15 @@ import com.amazonaws.services.s3.model.AccessControlList;
 import com.amazonaws.services.s3.model.GroupGrantee;
 import com.amazonaws.services.s3.model.Permission;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.devopsbuddy.exceptions.S3Exception;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.apache.commons.io.FilenameUtils;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -47,6 +49,7 @@ public class S3Service {
      * @param uploadedFile The multipart file uploaed by the user
      * @param username The username for which to upload this file
      * @return The URL of the uploaded image
+     * @throws S3Exception If something goes wrong
      */
     public String storeProfileImage(MultipartFile uploadedFile, String username)  {
 
@@ -84,7 +87,7 @@ public class S3Service {
                 tmpProfileImageFile.delete();
             }
         } catch (IOException e) {
-            //throw new S3Exception(e);
+            throw new S3Exception(e);
         }
 
         return profileImageUrl;
@@ -98,6 +101,7 @@ public class S3Service {
      * <p>Please note that the URL does not contain the bucket name</p>
      * @param bucketName The bucket name
      * @return the root URL where the bucket name is located.
+     * @throws S3Exception If something goes wrong.
      */
     private String ensureBucketExists(String bucketName) {
 
@@ -113,7 +117,7 @@ public class S3Service {
         } catch (AmazonClientException ace) {
             LOG.error("An error occurred while connecting to S3. Will not execute action" +
                     " for bucket: {}", bucketName, ace);
-           // throw new S3Exception(ace);
+            throw new S3Exception(ace);
         }
 
 
@@ -125,6 +129,7 @@ public class S3Service {
      * @param resource The file resource to upload to S3
      * @return The URL of the uploaded resource or null if a problem occurred
      *
+     * @throws S3Exception If the resource file does not exist
      */
     private String storeProfileImageToS3(File resource, String username) {
 
@@ -132,7 +137,7 @@ public class S3Service {
 
         if (!resource.exists()) {
             LOG.error("The file {} does not exist. Throwing an exception", resource.getAbsolutePath());
-           // throw new S3Exception("The file " + resource.getAbsolutePath() + " doesn't exist");
+            throw new S3Exception("The file " + resource.getAbsolutePath() + " doesn't exist");
         }
 
         String rootBucketUrl = this.ensureBucketExists(bucketName);
@@ -155,7 +160,7 @@ public class S3Service {
             } catch (AmazonClientException ace) {
                 LOG.error("A client exception occurred while trying to store the profile" +
                         " image {} on S3. The profile image won't be stored", resource.getAbsolutePath(), ace);
-               // throw new S3Exception(ace);
+                throw new S3Exception(ace);
             }
         }
 
