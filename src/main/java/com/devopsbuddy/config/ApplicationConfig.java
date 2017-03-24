@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EntityScan(basePackages = "com.devopsbuddy.backend.persistence.domain.backend")
 @EnableTransactionManagement
 @PropertySource("file:///${user.home}/devopsbuddy_config/application-common.properties")
+@PropertySource("file:///${user.home}/devopsbuddy_config/stripe.properties")
 public class ApplicationConfig {
 
 

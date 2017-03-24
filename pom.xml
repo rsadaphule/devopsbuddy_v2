@@ -123,6 +123,12 @@
 			<version>LATEST</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>1.40.0</version>
+		</dependency>
+
 
 	</dependencies>
 
