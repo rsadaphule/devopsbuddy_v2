@@ -2,11 +2,15 @@ package com.devopsbuddy.backend.service;
 
 import com.devopsbuddy.web.domain.frontend.FeedbackPojo;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.mail.SimpleMailMessage;
 
 /**
  * Created by sadap on 3/16/2017.
  */
+@PropertySource("file:///${user.home}/devopsbuddy_config/application-common.properties")
 public abstract class AbstractEmailService implements EmailService{
 
    @Value("${default.to.address}")
@@ -22,6 +26,8 @@ public abstract class AbstractEmailService implements EmailService{
 
         return message;
     }
+
+
 
 
     @Override
